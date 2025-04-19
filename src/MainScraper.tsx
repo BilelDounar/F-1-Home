@@ -56,14 +56,15 @@ const MainScraper = () => {
     };
 
     return (
-        <div className=" min-h-screen mx-auto w-[1300px] mt-8">
-            <div className="">
+        <div className=" min-h-screen mx-auto max-w-[1300px] mt-8">
+            <div className="flex flex-col items-center">
                 <h1 className="text-3xl font-bold text-center mb-6">Actuellement en direct</h1>
                 <iframe src={"https://hakunamatata5.org/sky-main-event/clean.html"}
-                    width="100%"
-                    height="502"
                     allowFullScreen
-                    className="border border-gray-300 rounded-lg overflow-hidden"></iframe>
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    sandbox="allow-same-origin allow-scripts"
+                    className="w-full h-[502px] border border-gray-300 rounded-lg overflow-hidden"
+                > </iframe>
             </div>
             <div className="w-full mx-auto bg-base-200 mt-8 p-8 rounded-lg shadow-lg">
                 <h1 className="text-3xl font-bold text-center mb-6">Consulter les archives F1</h1>
