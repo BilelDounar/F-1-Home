@@ -19,7 +19,9 @@ Conçue pour offrir une expérience utilisateur fluide, même avec un grand nomb
 
 - 🔁 **Navigation fluide**  
   Utilisation de `react-router-dom` pour basculer entre la page principale (accueil) et le lecteur vidéo sans rechargement complet de la page.
-
+  
+- 📱 **Design responsive**  
+  L'application est optimisée pour tous types d’écrans (mobile, tablette, desktop) grâce à Tailwind CSS et à des composants UI réactifs.
 ---
 
 ## 🛠️ Technologies utilisées
