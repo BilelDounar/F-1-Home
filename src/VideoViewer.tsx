@@ -147,7 +147,8 @@ const VideoViewer = () => {
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     sandbox="allow-same-origin allow-scripts"
                                     allowFullScreen
-                                    className="h-full w-full"
+                                    scrolling="no"
+                                    className="absolute inset-0 h-full w-full border-0"
                                 />
                             </Frame>
                         </div>
