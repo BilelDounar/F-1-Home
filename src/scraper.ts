@@ -97,6 +97,14 @@ export const fetchAvailableYears = async (): Promise<number[]> => {
     return staticYears();
 };
 
+/**
+ * Native aspect ratio of a season's broadcast footage. The F1 world
+ * feed moved to 16:9 widescreen in 2005; earlier seasons are 4:3.
+ * Used to size the player so the video fits edge-to-edge.
+ */
+export const broadcastAspect = (year: string | number): string =>
+    Number(year) >= 2005 ? "16 / 9" : "4 / 3";
+
 /** Fallback range matching what the archive advertises (1978 → today). */
 export const staticYears = (start = 1978): number[] => {
     const current = new Date().getFullYear();
