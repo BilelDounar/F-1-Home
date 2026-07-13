@@ -137,3 +137,24 @@ export const Spark = (props: SVGProps<SVGSVGElement>) => (
         <path d="M12 2 14 10 22 12 14 14 12 22 10 14 2 12 10 10Z" />
     </svg>
 );
+
+export const Chevron = (props: SVGProps<SVGSVGElement>) => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
+    >
+        <path d="m6 9 6 6 6-6" />
+    </svg>
+);
+
+/* Small inline loading spinner. */
+export const Spinner = ({ className = "" }: { className?: string }) => (
+    <span
+        className={`inline-block animate-spin rounded-full border-2 border-current/30 border-t-current ${className}`}
+    />
+);

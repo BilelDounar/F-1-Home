@@ -1,41 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { availableYears, scrapeSeason, type ScrapeProgress } from "./scraper";
+import { fetchAvailableYears, scrapeSeason, staticYears } from "./scraper";
 import { Reveal, Marquee, Frame, ArrowUpRight, Play } from "./ui";
 
-const YEARS = availableYears();
-
 const MainScraper = () => {
-    const [year, setYear] = useState(String(YEARS[0]));
+    const [years, setYears] = useState<number[]>(staticYears());
+    const [year, setYear] = useState(String(staticYears()[0]));
     const [loading, setLoading] = useState(false);
-    const [progress, setProgress] = useState<ScrapeProgress | null>(null);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    // Pull the real list of seasons the archive offers (1978 → today).
+    useEffect(() => {
+        let alive = true;
+        fetchAvailableYears().then((list) => {
+            if (!alive || list.length === 0) return;
+            setYears(list);
+            setYear(String(list[0]));
+        });
+        return () => {
+            alive = false;
+        };
+    }, []);
 
     const fetchLinks = async () => {
         setLoading(true);
         setError(null);
-        setProgress(null);
         try {
-            const videos = await scrapeSeason(year, setProgress);
-            if (videos.length === 0) {
-                setError(`Aucune vidéo trouvée pour la saison ${year}.`);
+            const grandsPrix = await scrapeSeason(year);
+            if (grandsPrix.length === 0) {
+                setError(`Aucun contenu trouvé pour la saison ${year}.`);
                 return;
             }
-            navigate("/lecteur", { state: { videos, date: year } });
+            navigate("/lecteur", { state: { grandsPrix, date: year } });
         } catch (err) {
             console.error(err);
             setError("Impossible de récupérer les archives. Réessayez plus tard.");
         } finally {
             setLoading(false);
-            setProgress(null);
         }
     };
-
-    const percent =
-        progress && progress.total > 0
-            ? Math.round((progress.loaded / progress.total) * 100)
-            : 0;
 
     return (
         <main className="overflow-clip">
@@ -50,7 +54,7 @@ const MainScraper = () => {
                         Signal en direct
                     </span>
                     <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-                        Season {YEARS[0]}
+                        Season {years[0]}
                     </span>
                 </Reveal>
 
@@ -63,14 +67,14 @@ const MainScraper = () => {
                 <div className="mt-10 grid grid-cols-1 items-end gap-8 lg:grid-cols-12">
                     <Reveal delay={140} className="lg:col-span-4">
                         <p className="max-w-md text-base leading-relaxed text-muted">
-                            Le direct de la Formule 1 et l'intégralité des archives,
-                            course par course, saison par saison. Sans jamais quitter
-                            la page.
+                            Le direct de la Formule 1 et l'intégralité des archives —
+                            essais, qualifs, sprint et course — saison par saison. Sans
+                            jamais quitter la page.
                         </p>
                         <div className="mt-8 flex gap-10 font-mono text-xs uppercase tracking-[0.14em] text-muted">
                             <div>
                                 <span className="display tabular block text-4xl text-ink">
-                                    {YEARS.length}
+                                    {years.length}
                                 </span>
                                 saisons
                             </div>
@@ -100,10 +104,10 @@ const MainScraper = () => {
             <div className="mt-16 rule-t rule-b py-4 sm:mt-24">
                 <Marquee
                     items={[
-                        "Grand Prix",
+                        "Essais libres",
                         "Qualifications",
                         "Sprint",
-                        "Replays",
+                        "Course",
                         "Pole position",
                         "Podium",
                     ]}
@@ -128,15 +132,15 @@ const MainScraper = () => {
                         </h2>
                     </div>
                     <p className="max-w-xs font-mono text-xs uppercase leading-relaxed tracking-[0.12em] text-muted">
-                        {YEARS.length} saisons indexées — chaque course reliée à son
-                        lecteur intégré.
+                        {years.length} saisons — de {years[years.length - 1]} à {years[0]}.
+                        Chaque week-end, session par session.
                     </p>
                 </Reveal>
 
                 {/* Year tiles */}
                 <Reveal delay={80}>
-                    <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3 lg:grid-cols-4">
-                        {YEARS.map((y) => {
+                    <div className="mt-12 grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
+                        {years.map((y) => {
                             const selected = String(y) === year;
                             return (
                                 <button
@@ -144,24 +148,13 @@ const MainScraper = () => {
                                     onClick={() => setYear(String(y))}
                                     disabled={loading}
                                     aria-pressed={selected}
-                                    className={`group relative flex items-baseline justify-between px-6 py-8 text-left transition-colors duration-300 ${
+                                    className={`display tabular px-3 py-5 text-2xl transition-colors duration-200 sm:text-3xl ${
                                         selected
                                             ? "bg-red text-white"
-                                            : "bg-bg text-ink hover:bg-surface"
+                                            : "bg-bg text-ink/80 hover:bg-surface hover:text-ink"
                                     }`}
                                 >
-                                    <span className="display tabular text-5xl sm:text-6xl">
-                                        {y}
-                                    </span>
-                                    <span
-                                        className={`font-mono text-[11px] uppercase tracking-[0.16em] transition-opacity ${
-                                            selected
-                                                ? "opacity-90"
-                                                : "opacity-40 group-hover:opacity-70"
-                                        }`}
-                                    >
-                                        {selected ? "Sélectionnée" : "Saison"}
-                                    </span>
+                                    {y}
                                 </button>
                             );
                         })}
@@ -188,29 +181,6 @@ const MainScraper = () => {
                             )}
                         </span>
                     </button>
-
-                    {loading && (
-                        <div className="mt-8 max-w-lg">
-                            <div className="mb-2 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
-                                <span>
-                                    {progress && progress.total > 0
-                                        ? "Récupération des courses"
-                                        : "Analyse de la saison"}
-                                </span>
-                                <span className="tabular">
-                                    {progress && progress.total > 0
-                                        ? `${progress.loaded}/${progress.total}`
-                                        : "…"}
-                                </span>
-                            </div>
-                            <div className="h-1 w-full overflow-hidden rounded-full bg-line">
-                                <div
-                                    className="h-full rounded-full bg-red transition-[width] duration-500"
-                                    style={{ width: `${Math.max(percent, 6)}%` }}
-                                />
-                            </div>
-                        </div>
-                    )}
 
                     {error && !loading && (
                         <div
