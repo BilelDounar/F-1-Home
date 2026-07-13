@@ -83,20 +83,29 @@ export const Marquee = ({
 /* ── Fixed film-grain overlay ────────────────────────────────── */
 export const Grain = () => <div className="grain" aria-hidden="true" />;
 
-/* ── Double-bezel frame (machined "hardware" enclosure) ──────── */
+/* ── Double-bezel frame (machined "hardware" enclosure) ──────────
+   `ratio` sizes the media box to the footage's native aspect (e.g.
+   "16 / 9" for modern broadcasts, "4 / 3" for pre-widescreen
+   archives) so the player fits the content edge-to-edge — no
+   pillarbox bars from the enclosure. Children fill the box. */
 export const Frame = ({
     children,
     className = "",
     live = false,
+    ratio = "16 / 9",
 }: {
     children: ReactNode;
     className?: string;
     live?: boolean;
+    ratio?: string;
 }) => (
     <div
         className={`relative rounded-[1.75rem] bg-white/[0.04] p-1.5 ring-1 ring-white/10 ${className}`}
     >
-        <div className="relative overflow-hidden rounded-[calc(1.75rem-0.375rem)] bg-black shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+        <div
+            className="relative overflow-hidden rounded-[calc(1.75rem-0.375rem)] bg-black shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]"
+            style={{ aspectRatio: ratio }}
+        >
             {children}
         </div>
         {live && (

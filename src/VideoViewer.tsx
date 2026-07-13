@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useRef, useState } from "react";
 import type { GrandPrix, Session, SessionType } from "./types";
-import { resolveSessionVideo } from "./scraper";
+import { resolveSessionVideo, broadcastAspect } from "./scraper";
 import { Reveal, Frame, ArrowUpRight, Play, Chevron, Spinner } from "./ui";
 
 const TYPE_ORDER: SessionType[] = [
@@ -25,6 +25,8 @@ const VideoViewer = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const year = String(location.state?.date || "");
+    const ratio = broadcastAspect(year);
+    const narrow = ratio === "4 / 3";
     const playerRef = useRef<HTMLDivElement>(null);
 
     const grandsPrix = useMemo<GrandPrix[]>(
@@ -137,16 +139,18 @@ const VideoViewer = () => {
                                 <ArrowUpRight className="h-4 w-4 rotate-45" />
                             </button>
                         </div>
-                        <Frame>
-                            <iframe
-                                src={playing.video}
-                                title={`${playing.gp.name} — ${playing.session.label}`}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                sandbox="allow-same-origin allow-scripts"
-                                allowFullScreen
-                                className="aspect-video w-full"
-                            />
-                        </Frame>
+                        <div className={narrow ? "mx-auto max-w-[52rem]" : ""}>
+                            <Frame ratio={ratio}>
+                                <iframe
+                                    src={playing.video}
+                                    title={`${playing.gp.name} — ${playing.session.label}`}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    sandbox="allow-same-origin allow-scripts"
+                                    allowFullScreen
+                                    className="h-full w-full"
+                                />
+                            </Frame>
+                        </div>
                     </Reveal>
                 )}
             </div>

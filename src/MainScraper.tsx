@@ -93,7 +93,7 @@ const MainScraper = () => {
                                 allowFullScreen
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 sandbox="allow-same-origin allow-scripts"
-                                className="aspect-video w-full"
+                                className="h-full w-full"
                             />
                         </Frame>
                     </Reveal>
