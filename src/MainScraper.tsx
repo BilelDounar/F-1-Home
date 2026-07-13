@@ -1,108 +1,120 @@
 import { useState } from "react";
-import axios from "axios";
-import * as cheerio from "cheerio";
 import { useNavigate } from "react-router-dom";
+import { availableYears, scrapeSeason, type ScrapeProgress } from "./scraper";
+
+const YEARS = availableYears();
 
 const MainScraper = () => {
-    const [year, setYear] = useState("2025");
+    const [year, setYear] = useState(String(YEARS[0]));
     const [loading, setLoading] = useState(false);
+    const [progress, setProgress] = useState<ScrapeProgress | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const fetchLinks = async () => {
         setLoading(true);
-        const baseUrl = `https://overtakefans.com/f1-race-archive/index.php?year=${year}`;
+        setError(null);
+        setProgress(null);
         try {
-            const response = await axios.get(baseUrl);
-            const $ = cheerio.load(response.data);
-            const raceLinks: { name: string; url: string }[] = [];
-
-            $("a").each((_, el) => {
-                const href = $(el).attr("href") || "";
-                if (
-                    href.startsWith("watch/index.php?race=") &&
-                    href.includes(`${year}`) &&
-                    href.includes("formula-1-race") &&
-                    !href.includes("source=official-result-main")
-                ) {
-                    const fullLink = `https://overtakefans.com/f1-race-archive/${href}`;
-                    const name = decodeURIComponent(
-                        href.split("race=")[1].replace(/-/g, " ").replace("formula 1 race", "").trim()
-                    );
-                    raceLinks.push({ name, url: fullLink });
-                }
-            });
-
-            const finalLinks: { name: string; video: string }[] = [];
-
-            for (const { name, url } of raceLinks) {
-                try {
-                    const res = await axios.get(url);
-                    const $race = cheerio.load(res.data);
-                    const iframeSrc = $race("iframe").attr("src");
-                    if (iframeSrc) {
-                        finalLinks.push({ name, video: iframeSrc });
-                    }
-                } catch (err) {
-                    console.error(`Erreur chargement ${url}`);
-                }
+            const videos = await scrapeSeason(year, setProgress);
+            if (videos.length === 0) {
+                setError(`Aucune vidéo trouvée pour la saison ${year}.`);
+                return;
             }
-
-            navigate("/lecteur", { state: { videos: finalLinks, date: year } });
+            navigate("/lecteur", { state: { videos, date: year } });
         } catch (err) {
             console.error(err);
+            setError("Impossible de récupérer les archives. Réessayez plus tard.");
         } finally {
             setLoading(false);
+            setProgress(null);
         }
     };
 
+    const percent =
+        progress && progress.total > 0
+            ? Math.round((progress.loaded / progress.total) * 100)
+            : 0;
+
     return (
-        <div className=" min-h-screen mx-auto max-w-[1300px] mt-8">
-            <div className="flex flex-col items-center">
-                <h1 className="text-3xl font-bold text-center mb-6">Actuellement en direct</h1>
-                <iframe src={"https://hakunamatata5.org/sky-main-event/clean.html"}
+        <div className="min-h-screen mx-auto max-w-[1300px] px-4 py-8">
+            {/* Live broadcast */}
+            <section className="flex flex-col items-center">
+                <div className="flex items-center gap-3 mb-6">
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-error" />
+                    </span>
+                    <h1 className="text-3xl font-bold text-center">Actuellement en direct</h1>
+                </div>
+                <iframe
+                    src="https://hakunamatata5.org/sky-main-event/clean.html"
                     allowFullScreen
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     sandbox="allow-same-origin allow-scripts"
-                    className="w-full h-[502px] border border-gray-300 rounded-lg overflow-hidden"
-                > </iframe>
-            </div>
-            <div className="w-full mx-auto bg-base-200 mt-8 p-8 rounded-lg shadow-lg">
-                <h1 className="text-3xl font-bold text-center mb-6">Consulter les archives F1</h1>
+                    className="w-full aspect-video max-h-[502px] border border-base-300 rounded-xl shadow-lg overflow-hidden"
+                />
+            </section>
 
-                <div className="flex flex-col justify-center gap-4 mb-6">
+            {/* Archive selector */}
+            <section className="w-full mx-auto bg-base-200 mt-10 p-8 rounded-2xl shadow-lg">
+                <h2 className="text-3xl font-bold text-center mb-2">Consulter les archives F1</h2>
+                <p className="text-center text-base-content/60 mb-6">
+                    Sélectionnez une saison pour revoir toutes les courses de l'année.
+                </p>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-2">
                     <select
                         value={year}
                         onChange={(e) => setYear(e.target.value)}
-                        className="select select-primary w-full"
+                        className="select select-primary sm:w-48"
+                        disabled={loading}
+                        aria-label="Choisir une saison"
                     >
-                        {[2025, 2024, 2023, 2022, 2021, 2020].map((y) => (
+                        {YEARS.map((y) => (
                             <option key={y} value={y}>
-                                {y}
+                                Saison {y}
                             </option>
                         ))}
                     </select>
 
                     <button
                         onClick={fetchLinks}
-                        className="btn btn-primary w-full"
+                        className="btn btn-primary sm:flex-1"
                         disabled={loading}
                     >
                         {loading ? (
-                            <span>⏳ Chargement...</span>
+                            <>
+                                <span className="loading loading-spinner loading-sm" />
+                                Chargement…
+                            </>
                         ) : (
-                            <span> Voir les vidéos</span>
+                            "🎬 Voir les vidéos"
                         )}
                     </button>
                 </div>
 
                 {loading && (
-                    <div className="text-center">
-                        <p>⏳ Chargement des vidéos, merci de patienter...</p>
+                    <div className="mt-6 text-center">
+                        <progress
+                            className="progress progress-primary w-full max-w-md"
+                            value={percent}
+                            max={100}
+                        />
+                        <p className="mt-2 text-sm text-base-content/70">
+                            {progress && progress.total > 0
+                                ? `Récupération des courses… ${progress.loaded}/${progress.total}`
+                                : "Recherche des courses de la saison…"}
+                        </p>
                     </div>
                 )}
-            </div>
 
-
+                {error && !loading && (
+                    <div className="alert alert-error mt-6" role="alert">
+                        <span>⚠️ {error}</span>
+                    </div>
+                )}
+            </section>
         </div>
     );
 };
