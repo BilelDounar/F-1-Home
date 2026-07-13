@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   F1 HOME — Editorial motorsport brutalism
+   Near-black canvas · Formula 1 red · oversized kinetic type
+   ───────────────────────────────────────────────────────────── */
+@theme {
+    --color-bg: #0a0a0b;
+    --color-surface: #111116;
+    --color-surface2: #17171d;
+    --color-ink: #f4f4ef;
+    --color-muted: #86868b;
+    --color-red: #e10600;
+    --color-red-deep: #b00500;
+    --color-line: rgba(244, 244, 239, 0.12);
+
+    --font-display: "Anton", "Arial Narrow", sans-serif;
+    --font-sans: "Space Grotesk", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        background-color: var(--color-bg);
+    }
+
+    body {
+        background-color: var(--color-bg);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        overflow-x: hidden;
+    }
+
+    ::selection {
+        background: var(--color-red);
+        color: #fff;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-red);
+        outline-offset: 3px;
+    }
+}
+
+/* ── Display type ─────────────────────────────────────────── */
+.display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    line-height: 0.86;
+    letter-spacing: -0.01em;
+}
+
+.tabular {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Scroll reveal ────────────────────────────────────────── */
+.reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    filter: blur(6px);
+    transition:
+        opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.9s ease;
+    will-change: transform, opacity;
+}
+
+.reveal-in {
+    opacity: 1;
+    transform: none;
+    filter: none;
+}
+
+/* ── Infinite marquee ─────────────────────────────────────── */
+.marquee {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+}
+
+.marquee-track {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0;
+    min-width: 100%;
+    animation: marquee-scroll 26s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+/* ── Checkered flag strip ─────────────────────────────────── */
+.checker {
+    background-image:
+        repeating-conic-gradient(var(--color-ink) 0% 25%, transparent 0% 50%);
+    background-size: 16px 16px;
+    background-position: 0 0, 8px 8px;
+}
+
+/* ── Film grain (fixed, non-interactive) ──────────────────── */
+.grain {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Utility: hairline top/bottom rules ───────────────────── */
+.rule-t {
+    border-top: 1px solid var(--color-line);
+}
+.rule-b {
+    border-bottom: 1px solid var(--color-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    .reveal {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+    }
+    .marquee-track {
+        animation: none;
+    }
+}
