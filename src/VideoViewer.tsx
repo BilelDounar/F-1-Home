@@ -1,14 +1,15 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { RaceVideo } from "./types";
+import { Reveal, Frame, ArrowUpRight, Play } from "./ui";
 
 const VideoViewer = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const year = String(location.state?.date || "");
+    const playerRef = useRef<HTMLDivElement>(null);
 
-    // Display the season in chronological order (by race round), with a stable
-    // alphabetical fallback when a round is missing.
+    // Season shown in chronological order (by round), stable name fallback.
     const races = useMemo(() => {
         const videos: RaceVideo[] = location.state?.videos || [];
         return [...videos].sort(
@@ -18,96 +19,160 @@ const VideoViewer = () => {
 
     const [active, setActive] = useState<RaceVideo | null>(null);
 
+    const select = (race: RaceVideo) => {
+        setActive(race);
+        requestAnimationFrame(() =>
+            playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        );
+    };
+
     if (races.length === 0) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center text-center p-6">
-                <p className="text-2xl mb-4">🛑 Aucune vidéo trouvée pour cette saison.</p>
-                <button onClick={() => navigate("/")} className="btn btn-primary">
-                    Retour à l'accueil
-                </button>
-            </div>
+            <main className="grid min-h-[100dvh] place-items-center px-6 text-center">
+                <div>
+                    <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-red">
+                        Drapeau rouge
+                    </p>
+                    <h1 className="display text-[clamp(3rem,12vw,8rem)] text-ink">
+                        Aucune course
+                    </h1>
+                    <p className="mb-8 text-muted">
+                        Cette saison ne contient aucune vidéo pour le moment.
+                    </p>
+                    <button
+                        onClick={() => navigate("/")}
+                        className="inline-flex items-center gap-2 rounded-full bg-red px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white"
+                    >
+                        Retour à l'accueil
+                        <ArrowUpRight className="h-4 w-4" />
+                    </button>
+                </div>
+            </main>
         );
     }
 
     return (
-        <div className="min-h-screen p-4 sm:p-6">
-            <div className="mx-auto max-w-[1300px]">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <div>
-                        <h1 className="text-3xl sm:text-4xl font-bold">
-                            Saison <span className="text-primary">{year}</span>
-                        </h1>
-                        <p className="text-base-content/60">
-                            {races.length} course{races.length > 1 ? "s" : ""} disponible
-                            {races.length > 1 ? "s" : ""}
-                        </p>
+        <main className="mx-auto max-w-[1320px] px-5 pb-10 pt-32 sm:pt-40">
+            {/* ── Season header ───────────────────────────────────── */}
+            <Reveal
+                as="header"
+                className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
+            >
+                <div>
+                    <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-red">
+                        Archive — saison
+                    </p>
+                    <h1 className="display text-[clamp(4rem,20vw,14rem)] leading-[0.8] text-ink">
+                        {year}
+                    </h1>
+                </div>
+                <div className="flex items-center gap-6">
+                    <div className="text-right font-mono text-xs uppercase tracking-[0.14em] text-muted">
+                        <span className="block tabular text-3xl text-ink">
+                            {String(races.length).padStart(2, "0")}
+                        </span>
+                        course{races.length > 1 ? "s" : ""}
                     </div>
-                    <button onClick={() => navigate("/")} className="btn btn-outline btn-primary">
-                        ← Retour à l'accueil
+                    <button
+                        onClick={() => navigate("/")}
+                        className="group inline-flex items-center gap-2 rounded-full border border-line px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-ink transition-colors hover:bg-surface"
+                    >
+                        <ArrowUpRight className="h-4 w-4 rotate-[225deg] transition-transform group-hover:-translate-x-0.5" />
+                        Accueil
                     </button>
                 </div>
+            </Reveal>
 
-                {/* Featured player */}
+            {/* ── Featured player ─────────────────────────────────── */}
+            <div ref={playerRef} className="scroll-mt-28">
                 {active && (
-                    <div className="bg-base-200 rounded-2xl shadow-lg p-4 sm:p-6 mb-8">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-3">
-                                <span className="badge badge-primary badge-lg">
-                                    Manche {active.round}
+                    <Reveal className="mt-12">
+                        <div className="mb-4 flex items-center justify-between gap-4">
+                            <h2 className="flex items-baseline gap-4">
+                                <span className="display tabular text-red text-3xl sm:text-4xl">
+                                    R{String(active.round).padStart(2, "0")}
                                 </span>
-                                {active.name}
+                                <span className="display text-2xl text-ink sm:text-4xl">
+                                    {active.name}
+                                </span>
                             </h2>
                             <button
                                 onClick={() => setActive(null)}
-                                className="btn btn-sm btn-ghost"
                                 aria-label="Fermer le lecteur"
+                                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-muted transition-colors hover:bg-surface hover:text-ink"
                             >
-                                ✕
+                                <ArrowUpRight className="h-4 w-4 rotate-45" />
                             </button>
                         </div>
-                        <iframe
-                            src={active.video}
-                            title={active.name}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            sandbox="allow-same-origin allow-scripts"
-                            allowFullScreen
-                            className="w-full aspect-video border border-base-300 rounded-xl overflow-hidden"
-                        />
-                    </div>
+                        <Frame>
+                            <iframe
+                                src={active.video}
+                                title={active.name}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                sandbox="allow-same-origin allow-scripts"
+                                allowFullScreen
+                                className="aspect-video w-full"
+                            />
+                        </Frame>
+                    </Reveal>
                 )}
+            </div>
 
-                {/* Race grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {races.map((race) => {
+            {/* ── Race index (calendar) ───────────────────────────── */}
+            <section className="mt-16">
+                <div className="mb-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+                    <span>Calendrier</span>
+                    <span>Lecteur intégré</span>
+                </div>
+
+                <ul className="border-t border-line">
+                    {races.map((race, i) => {
                         const isActive = active?.video === race.video;
                         return (
-                            <button
-                                key={race.video}
-                                onClick={() => setActive(race)}
-                                className={`group text-left rounded-xl border transition shadow-sm hover:shadow-lg hover:-translate-y-0.5 ${
-                                    isActive
-                                        ? "border-primary ring-2 ring-primary bg-primary/5"
-                                        : "border-base-300 bg-base-200 hover:border-primary/50"
-                                }`}
-                            >
-                                <div className="aspect-video flex items-center justify-center bg-neutral text-neutral-content rounded-t-xl">
-                                    <span className="text-4xl transition-transform group-hover:scale-125">
-                                        ▶️
+                            <Reveal as="li" key={race.video} delay={Math.min(i * 40, 320)}>
+                                <button
+                                    onClick={() => select(race)}
+                                    className={`group grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-line py-6 text-left transition-colors duration-300 sm:gap-8 sm:py-7 ${
+                                        isActive ? "bg-red/[0.06]" : "hover:bg-surface"
+                                    }`}
+                                >
+                                    <span
+                                        className={`display tabular pl-1 text-4xl transition-colors sm:pl-4 sm:text-6xl ${
+                                            isActive
+                                                ? "text-red"
+                                                : "text-muted group-hover:text-ink"
+                                        }`}
+                                    >
+                                        {String(race.round).padStart(2, "0")}
                                     </span>
-                                </div>
-                                <div className="p-4">
-                                    <span className="badge badge-outline badge-sm mb-2">
-                                        Manche {race.round}
+
+                                    <span className="min-w-0">
+                                        <span className="display block truncate text-2xl text-ink sm:text-4xl">
+                                            {race.name}
+                                        </span>
+                                        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted sm:text-[11px]">
+                                            {isActive
+                                                ? "En lecture"
+                                                : `Manche ${race.round} — Grand Prix`}
+                                        </span>
                                     </span>
-                                    <h3 className="font-semibold leading-snug">{race.name}</h3>
-                                </div>
-                            </button>
+
+                                    <span
+                                        className={`mr-1 grid h-11 w-11 shrink-0 place-items-center rounded-full transition-all duration-300 sm:mr-4 sm:h-14 sm:w-14 ${
+                                            isActive
+                                                ? "bg-red text-white"
+                                                : "bg-surface2 text-ink group-hover:bg-red group-hover:text-white"
+                                        }`}
+                                    >
+                                        <Play className="h-4 w-4 translate-x-px sm:h-5 sm:w-5" />
+                                    </span>
+                                </button>
+                            </Reveal>
                         );
                     })}
-                </div>
-            </div>
-        </div>
+                </ul>
+            </section>
+        </main>
     );
 };
 
