@@ -87,9 +87,13 @@ const MainScraper = () => {
 
                     <Reveal delay={200} className="lg:col-span-8">
                         <Frame live>
+                            {/* Lecteur « Sky Sport F1 HD » servi par la même source
+                                (overtakefans.com, page web-player). À mettre à jour si le
+                                serveur change : voir la liste des serveurs actifs sur
+                                overtakefans.com/f1-live-stream/…-via-web-player/. */}
                             <iframe
                                 title="F1 — flux en direct"
-                                src="https://hakunamatata5.org/sky-main-event/clean.html"
+                                src="https://boycott-piracy.site/embed/1a0edc01-8363-11f0-b385-bc2411b21e0d"
                                 allowFullScreen
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 sandbox="allow-same-origin allow-scripts"
